@@ -1,0 +1,17 @@
+{
+  "name": "@nyxcore/nyxcorebtns",
+  "version": "1.0.0",
+  "description": "NYXCORE Buttons: reliable WhatsApp native-flow buttons, lists, copy/URL/call buttons and click handling for Baileys-based bots, with automatic text fallback",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": ["whatsapp", "baileys", "buttons", "native-flow", "interactive", "list", "nyxcore"],
+  "homepage": "https://github.com/NYXCORE-X/NYXCORE-BTNS",
+  "repository": { "type": "git", "url": "git+https://github.com/NYXCORE-X/NYXCORE-BTNS.git" },
+  "bugs": { "url": "https://github.com/NYXCORE-X/NYXCORE-BTNS/issues" },
+  "license": "MIT",
+  "author": "NYXCORE",
+  "publishConfig": { "access": "public" },
+  "files": ["index.js", "index.d.ts", "lib/**/*", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node --test test/btns.test.js" }
+}
