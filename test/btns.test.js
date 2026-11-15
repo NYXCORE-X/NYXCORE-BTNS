@@ -47,26 +47,41 @@ test('sendButtons relays a native-flow message with the routing nodes', async ()
   const msg = await B.sendButtons(sock, '123@g.us', { title: 'T', text: 'Body', footer: 'F', buttons: [B.btn.quickReply('Go', 'go')] })
   assert.strictEqual(msg.nyxMode, 'native')
   const r = sock.relayed[0]
-  const im = r.message.viewOnceMessage.message.interactiveMessage
+  const im = r.message.interactiveMessage
   assert.strictEqual(im.body.text, 'Body')
   assert.strictEqual(im.footer.text, 'F')
   assert.strictEqual(im.nativeFlowMessage.buttons[0].name, 'quick_reply')
-  assert.strictEqual(r.message.viewOnceMessage.message.messageContextInfo.deviceListMetadataVersion, 2)
+  assert.ok(r.message.messageContextInfo.messageSecret)
+  assert.strictEqual(r.message.messageContextInfo.deviceListMetadataVersion, undefined) // groups: no device list
   assert.strictEqual(r.opts.messageId, 'MSGID')
   assert.deepStrictEqual(r.opts.additionalNodes.map(n => n.tag), ['biz']) // group: no bot node
 })
 
-test('private chats also get the bot marker', async () => {
+test('private chats get deviceListMetadata and the new biz routing, no bot node', async () => {
   const sock = makeSock()
   await B.sendButtons(sock, '234@s.whatsapp.net', { text: 'x', buttons: [B.btn.copy('c', '1')] })
-  assert.deepStrictEqual(sock.relayed[0].opts.additionalNodes.map(n => n.tag), ['biz', 'bot'])
+  const r = sock.relayed[0]
+  assert.strictEqual(r.message.messageContextInfo.deviceListMetadataVersion, 2)
+  const nodes = r.opts.additionalNodes
+  assert.deepStrictEqual(nodes.map(n => n.tag), ['biz'])
+  assert.strictEqual(nodes[0].attrs.actual_actors, '2')
+  assert.strictEqual(nodes[0].attrs.host_storage, '2')
+  assert.deepStrictEqual(nodes[0].content.map(n => n.tag), ['interactive', 'quality_control'])
+  assert.strictEqual(nodes[0].content[1].content[0].attrs.value, 'df')
+  assert.strictEqual(nodes[0].content[0].content[0].attrs.name, 'mixed')
+})
+
+test('wrap:true keeps the old viewOnce wrapper', async () => {
+  const sock = makeSock()
+  await B.sendButtons(sock, '234@s.whatsapp.net', { text: 'x', wrap: true, buttons: [B.btn.copy('c', '1')] })
+  assert.ok(sock.relayed[0].message.viewOnceMessage.message.interactiveMessage)
 })
 
 test('quoted + mentions go into contextInfo', async () => {
   const sock = makeSock()
   const quoted = { key: { id: 'Q', remoteJid: '9@s.whatsapp.net' }, message: { conversation: 'hey' } }
   await B.sendButtons(sock, '9@s.whatsapp.net', { text: 'x', mentions: ['5@s.whatsapp.net'], buttons: [B.btn.quickReply('a', 'a')] }, { quoted })
-  const ctx = sock.relayed[0].message.viewOnceMessage.message.interactiveMessage.contextInfo
+  const ctx = sock.relayed[0].message.interactiveMessage.contextInfo
   assert.strictEqual(ctx.stanzaId, 'Q')
   assert.deepStrictEqual(ctx.mentionedJid, ['5@s.whatsapp.net'])
 })
@@ -74,7 +89,7 @@ test('quoted + mentions go into contextInfo', async () => {
 test('image header is uploaded and attached', async () => {
   const sock = makeSock()
   await B.sendButtons(sock, '9@s.whatsapp.net', { text: 'x', image: 'https://img/x.png', buttons: [B.btn.quickReply('a', 'a')] })
-  const h = sock.relayed[0].message.viewOnceMessage.message.interactiveMessage.header
+  const h = sock.relayed[0].message.interactiveMessage.header
   assert.strictEqual(h.hasMediaAttachment, true)
   assert.strictEqual(h.imageMessage.url, 'uploaded')
 })
@@ -99,7 +114,7 @@ test('fallback:false throws instead', async () => {
 test('sendList builds a single_select', async () => {
   const sock = makeSock()
   await B.sendList(sock, '9@s.whatsapp.net', { text: 'Pick', buttonText: 'Open', sections: [{ title: 'A', rows: [{ id: '1', title: 'One' }] }] })
-  const btn = sock.relayed[0].message.viewOnceMessage.message.interactiveMessage.nativeFlowMessage.buttons[0]
+  const btn = sock.relayed[0].message.interactiveMessage.nativeFlowMessage.buttons[0]
   assert.strictEqual(btn.name, 'single_select')
 })
 
