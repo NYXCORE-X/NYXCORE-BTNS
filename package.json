@@ -1,6 +1,6 @@
 {
   "name": "@nyxcore/nyxcorebtns",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NYXCORE Buttons: reliable WhatsApp native-flow buttons, lists, copy/URL/call buttons and click handling for Baileys-based bots, with automatic text fallback",
   "main": "index.js",
   "types": "index.d.ts",
